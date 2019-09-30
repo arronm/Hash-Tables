@@ -126,6 +126,15 @@ class HashTable:
         # Check current capacity and resize as necessary
         # 0.7 capacity, double
         # 0.2 capacity, halve
+        
+    
+    def _double(self):
+        '''
+        Doubles the capacity of the hash table and
+        rehash all key/value pairs.
+
+        Fill this in.
+        '''
         # Double our capacity
         old_storage = self.storage
         old_capacity = self.capacity
@@ -146,15 +155,6 @@ class HashTable:
 
             # Insert last linked pair
             self.insert(current.key, current.value)
-    
-    def _double(self):
-        '''
-        Doubles the capacity of the hash table and
-        rehash all key/value pairs.
-
-        Fill this in.
-        '''
-        pass
 
     def _halve(self):
         pass
