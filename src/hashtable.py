@@ -76,7 +76,28 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
+        
+        current = self.storage[index]
+
+        # handle case where key is first linked
+        if current.key == key:
+            # Our item is first in the linked list, check if next
+            if current.next is None:
+                # No other items in this list, reset storage at index
+                self.storage[index] = None
+            else:
+                self.storage[index] = current.next
+            
+            return current.value
+        
+        # while we have a next link, and that next link is not our desired key
+        while current.next and current.next.key != key:
+            current = current.next
+        
+        removed = current.next
+        current.next = removed.next
+        return removed.value
 
 
     def retrieve(self, key):
