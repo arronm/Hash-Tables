@@ -32,7 +32,10 @@ class HashTable:
 
         OPTIONAL STRETCH: Research and implement DJB2
         '''
-        pass
+        hash = 5381  # 52711
+        for letter in key:
+            hash = (( hash << 5) + hash) + ord(letter)
+        return hash  # & 0xFFFFFFFF
 
 
     def _hash_mod(self, key):
@@ -126,7 +129,7 @@ class HashTable:
         # Check current capacity and resize as necessary
         # 0.7 capacity, double
         # 0.2 capacity, halve
-        
+        pass
     
     def _double(self):
         '''
