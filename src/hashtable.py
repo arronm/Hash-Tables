@@ -126,7 +126,26 @@ class HashTable:
         # Check current capacity and resize as necessary
         # 0.7 capacity, double
         # 0.2 capacity, halve
-        pass
+        # Double our capacity
+        old_storage = self.storage
+        old_capacity = self.capacity
+        self.capacity *= 2
+        self.storage = [None] * self.capacity
+
+        # Loop through old storage to rehash k,v pairs
+        for i in range(old_capacity):
+            current = old_storage[i]
+
+            # skip empty indexes
+            if current is None:
+                continue
+            
+            while current.next:
+                self.insert(current.key, current.value)
+                current = current.next
+
+            # Insert last linked pair
+            self.insert(current.key, current.value)
     
     def _double(self):
         '''
