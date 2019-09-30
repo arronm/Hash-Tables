@@ -40,7 +40,7 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         within the storage capacity of the hash table.
         '''
-        return self._hash(key) % self.capacity
+        return self._hash_djb2(key) % self.capacity
 
 
     def insert(self, key, value):
@@ -51,8 +51,21 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
 
+        if self.storage[index] is None:
+            self.storage[index] = LinkedPair(key, value)
+        else:
+            lookup = self.storage[index]
+            while lookup.next:
+                if lookup.key == key:
+                    break
+                lookup = lookup.next
+
+            if lookup.key == key:
+                lookup.value = value
+            else:
+                lookup.next = LinkedPair(key, value)
 
 
     def remove(self, key):
@@ -78,12 +91,21 @@ class HashTable:
 
 
     def resize(self):
+        # Check current capacity and resize as necessary
+        # 0.7 capacity, double
+        # 0.2 capacity, halve
+        pass
+    
+    def _double(self):
         '''
         Doubles the capacity of the hash table and
         rehash all key/value pairs.
 
         Fill this in.
         '''
+        pass
+
+    def _halve(self):
         pass
 
 
