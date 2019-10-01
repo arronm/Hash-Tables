@@ -15,6 +15,9 @@ class HashTable:
     def __init__(self, capacity):
         self.capacity = capacity  # Number of buckets in the hash table
         self.storage = [None] * capacity
+        self.load = 0
+        self.init_cap = capacity
+        self.resizing = False
 
 
     def _hash(self, key):
@@ -32,7 +35,10 @@ class HashTable:
 
         OPTIONAL STRETCH: Research and implement DJB2
         '''
-        pass
+        hash = 5381  # 52711
+        for letter in key:
+            hash = (( hash << 5) + hash) + ord(letter)
+        return hash  # & 0xFFFFFFFF
 
 
     def _hash_mod(self, key):
@@ -40,7 +46,7 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         within the storage capacity of the hash table.
         '''
-        return self._hash(key) % self.capacity
+        return self._hash_djb2(key) % self.capacity
 
 
     def insert(self, key, value):
@@ -51,8 +57,26 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
 
+        if self.storage[index] is None:
+            self.load += 1
+            self.storage[index] = LinkedPair(key, value)
+            
+            if not self.resizing:
+                self.resize()
+        else:
+            lookup = self.storage[index]
+            while lookup.next:
+                if lookup.key == key:
+                    break
+                lookup = lookup.next
+
+            if lookup.key == key:
+                lookup.value = value
+            else:
+                self.load += 1
+                lookup.next = LinkedPair(key, value)
 
 
     def remove(self, key):
@@ -63,7 +87,36 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
+        
+        current = self.storage[index]
+
+        # handle case where key is first linked
+        if current.key == key:
+            # Our item is first in the linked list, check if next
+            if current.next is None:
+                # No other items in this list, reset storage at index
+                self.storage[index] = None
+            else:
+                self.storage[index] = current.next
+            
+            return current.value
+        
+        # while we have a next link, and that next link is not our desired key
+        while current.next and current.next.key != key:
+            current = current.next
+        
+        removed = current.next
+
+        if removed is not None:
+            current.next = removed.next
+            self.load -= 1
+            if not self.resizing:
+                self.resize()
+            return removed.value
+        else:
+            print("Key not found")
+            return None
 
 
     def retrieve(self, key):
@@ -74,18 +127,77 @@ class HashTable:
 
         Fill this in.
         '''
-        pass
+        index = self._hash_mod(key)
+
+        lookup = self.storage[index]
+        if lookup is None:
+            return None
+
+        while lookup.key != key:
+            if lookup.next is None:
+                return None
+            lookup = lookup.next
+        
+        return lookup.value
 
 
     def resize(self):
+        # Check current capacity and resize as necessary
+        self.resizing = True
+        resized = False
+
+        if self.load >= (self.capacity * 0.7):
+            # 0.7 capacity, double
+            resized = True
+            self.load = 0
+            old_storage, old_capacity = self._double()
+        elif self.load <= (self.capacity * 0.2) and self.capacity > self.init_cap:
+            # 0.2 capacity, halve
+            resized = True
+            self.load = 0
+            old_storage, old_capacity = self._halve()
+        
+        # Loop through old storage to rehash k,v pairs
+        if resized:
+            for i in range(old_capacity):
+                current = old_storage[i]
+
+                # skip empty indexes
+                if current is None:
+                    continue
+                
+                while current.next:
+                    self.insert(current.key, current.value)
+                    current = current.next
+
+                # Insert last linked pair
+                self.insert(current.key, current.value)
+        
+        self.resizing = False
+    
+    def _double(self):
         '''
         Doubles the capacity of the hash table and
         rehash all key/value pairs.
 
         Fill this in.
         '''
-        pass
+        # Double our capacity
+        old_storage = self.storage
+        old_capacity = self.capacity
+        self.capacity *= 2
+        self.storage = [None] * self.capacity
 
+        return (old_storage, old_capacity)
+        
+
+    def _halve(self):
+        old_storage = self.storage
+        old_capacity = self.capacity
+        self.capacity = int(self.capacity / 2) if int(self.capacity / 2) >= self.init_cap else self.init_cap
+        self.storage = [None] * self.capacity
+
+        return (old_storage, old_capacity)
 
 
 if __name__ == "__main__":
