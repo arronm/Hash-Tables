@@ -16,6 +16,8 @@ class HashTable:
         self.capacity = capacity  # Number of buckets in the hash table
         self.storage = [None] * capacity
         self.load = 0
+        self.init_cap = capacity
+        self.resizing = False
 
 
     def _hash(self, key):
@@ -58,9 +60,11 @@ class HashTable:
         index = self._hash_mod(key)
 
         if self.storage[index] is None:
-            self.storage[index] = LinkedPair(key, value)
             self.load += 1
-            self.resize()
+            self.storage[index] = LinkedPair(key, value)
+            
+            if not self.resizing:
+                self.resize()
         else:
             lookup = self.storage[index]
             while lookup.next:
@@ -71,6 +75,7 @@ class HashTable:
             if lookup.key == key:
                 lookup.value = value
             else:
+                self.load += 1
                 lookup.next = LinkedPair(key, value)
 
 
@@ -104,7 +109,8 @@ class HashTable:
         removed = current.next
         current.next = removed.next
         self.load -= 1
-        self.resize()
+        if not self.resizing:
+            self.resize()
         return removed.value
 
 
@@ -132,16 +138,16 @@ class HashTable:
 
     def resize(self):
         # Check current capacity and resize as necessary
+        self.resizing = True
         # 0.7 capacity, double
         if self.load >= (self.capacity * 0.7):
             self.load = 0
             self._double()
-
-        # 0.2 capacity, halve
-        if self.load <= (self.capacity * 0.2):
-            # self.load = 0
-            # shrink
-            pass
+        elif self.load <= (self.capacity * 0.2) and self.capacity > self.init_cap:
+            self.load = 0
+            self._halve()
+        
+        self.resizing = False
     
     def _double(self):
         '''
@@ -172,7 +178,22 @@ class HashTable:
             self.insert(current.key, current.value)
 
     def _halve(self):
-        pass
+        old_storage = self.storage
+        old_capacity = self.capacity
+        self.capacity = int(self.capacity / 2) if int(self.capacity / 2) >= self.init_cap else self.init_cap
+        self.storage = [None] * self.capacity
+
+        for i in range(old_capacity):
+            current = old_storage[i]
+
+            if current is None:
+                continue
+
+            while current.next:
+                self.insert(current.key, current.value)
+                current = current.next
+            
+            self.insert(current.key, current.value)
 
 
 
