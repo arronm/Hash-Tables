@@ -107,11 +107,16 @@ class HashTable:
             current = current.next
         
         removed = current.next
-        current.next = removed.next
-        self.load -= 1
-        if not self.resizing:
-            self.resize()
-        return removed.value
+
+        if removed is not None:
+            current.next = removed.next
+            self.load -= 1
+            if not self.resizing:
+                self.resize()
+            return removed.value
+        else:
+            print("Key not found")
+            return None
 
 
     def retrieve(self, key):
